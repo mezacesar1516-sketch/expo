@@ -1,127 +1,158 @@
----
-title: Expo SDK reference
-description: Access device and system functionality in your Expo and React Native apps using Expo SDK packages.
-hideTOC: true
----
-
-import { BookOpen02Icon } from '@expo/styleguide-icons/outline/BookOpen02Icon';
-import { CodeSquare01Icon } from '@expo/styleguide-icons/outline/CodeSquare01Icon';
-
-import { BoxLink } from '~/ui/components/BoxLink';
-import { Collapsible } from '~/ui/components/Collapsible';
-import RedirectNotification from '~/ui/components/RedirectNotification';
+import React, { useState } from 'react';
 import {
-  AndroidIOSCompatibilityTable,
-  ReactNativeCompatibilityTable,
-} from '~/ui/components/SDKTables';
-import { Terminal } from '~/ui/components/Snippet';
-import { CODE } from '~/ui/components/Text';
+  SafeAreaView,
+  View,
+  Text,
+  TextInput,
+  Pressable,
+  StyleSheet,
+  ScrollView,
+  Alert,
+} from 'react-native';
 
-<RedirectNotification>
-  The page you are looking for does not exist in this SDK version. It may have been deprecated or
-  added to a newer SDK version.
-</RedirectNotification>
+export default function App() {
+  const [servicio, setServicio] = useState('Tienda');
+  const [direccion, setDireccion] = useState('');
+  const [destino, setDestino] = useState('');
+  const [km, setKm] = useState('1');
 
-The Expo SDK is a collection of packages that provide access to device and system functionality such as camera, contacts, location, sensors, haptics, and more. Each package targets a specific feature and can be used independently. All packages work in any React Native app with the `expo` package installed.
+  const distancia = Math.max(0, Number(km) || 0);
+  const precio = 30 + distancia * 10;
 
-You can install any Expo SDK package using the [`npx expo install`](/more/expo-cli/#install) command. For example, three different packages are installed using the following command:
+  return (
+    <SafeAreaView style={styles.fondo}>
+      <ScrollView contentContainerStyle={styles.contenido}>
+        <Text style={styles.logo}>🚲</Text>
+        <Text style={styles.titulo}>Mandados Santiago</Text>
+        <Text style={styles.subtitulo}>
+          Tus mandados, hasta tu puerta
+        </Text>
 
-<Terminal cmd={['$ npx expo install expo-camera expo-contacts expo-sensors']} />
+        <Text style={styles.etiqueta}>¿Qué necesitas?</Text>
+        <View style={styles.servicios}>
+          {['Tienda', 'Comida', 'Farmacia', 'Paquetes'].map((s) => (
+            <Pressable
+              key={s}
+              onPress={() => setServicio(s)}
+              style={[
+                styles.opcion,
+                servicio === s && styles.seleccionado,
+              ]}
+            >
+              <Text style={servicio === s ? styles.blanco : styles.texto}>
+                {s}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
 
-After installing one or more packages, you can import them into your JavaScript code:
+        <Text style={styles.etiqueta}>Lugar de recogida</Text>
+        <TextInput
+          style={styles.campo}
+          placeholder="Tienda o dirección"
+          value={direccion}
+          onChangeText={setDireccion}
+        />
 
-```ts
-import { CameraView } from 'expo-camera';
-import { Contact } from 'expo-contacts';
-import { Gyroscope } from 'expo-sensors';
-```
+        <Text style={styles.etiqueta}>¿A dónde lo llevamos?</Text>
+        <TextInput
+          style={styles.campo}
+          placeholder="Tu dirección de entrega"
+          value={destino}
+          onChangeText={setDestino}
+        />
 
-This allows you to write [`Contact.getAll()`](./sdk/contacts#getalloptions) and read the contacts from the device, read the gyroscope sensor to detect device movement, or start the phone's camera and take photos.
+        <Text style={styles.etiqueta}>Distancia estimada en km</Text>
+        <TextInput
+          style={styles.campo}
+          placeholder="Ej. 3"
+          keyboardType="decimal-pad"
+          value={km}
+          onChangeText={setKm}
+        />
 
-## All Expo SDK packages work in any React Native app
+        <View style={styles.precio}>
+          <Text style={styles.precioTexto}>Precio estimado</Text>
+          <Text style={styles.cantidad}>
+            ${Number.isFinite(precio) ? precio.toFixed(2) : '30.00'} MXN
+          </Text>
+          <Text style={styles.nota}>
+            $30 base + $10 por kilómetro.
+            Precio por confirmar.
+          </Text>
+        </View>
 
-Expo apps are React Native apps, so all Expo SDK packages work in any React Native app with the `expo` package installed and configured. The easiest way to create a React Native app with support for Expo SDK packages is to use `create-expo-app`. However, you can also add Expo SDK support to an existing React Native app with the `npx install-expo-modules` command.
+        <Pressable
+          style={styles.boton}
+          onPress={() => {
+            if (!direccion.trim() || !destino.trim()) {
+              Alert.alert(
+                'Faltan datos',
+                'Escribe el lugar de recogida y la dirección de entrega.'
+              );
+              return;
+            }
+            Alert.alert(
+              'Demostración',
+              'Tu formulario funciona. Todavía no se envía un pedido real.'
+            );
+          }}
+        >
+          <Text style={styles.botonTexto}>Solicitar mandado</Text>
+        </Pressable>
+        <Text style={styles.pie}>
+          Santiago Papasquiaro, Durango
+        </Text>
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
 
-<Terminal
-  cmd={['# Create a project named my-app', '$ npx create-expo-app my-app --template bare-minimum']}
-  cmdCopy="npx create-expo-app my-app --template bare-minimum"
-/>
-
-<BoxLink
-  title="Install Expo SDK packages in existing React Native apps"
-  href="/bare/installing-expo-modules"
-  description={
-    <>
-      Learn more about configuring projects created with{' '}
-      <CODE>npx @react-native-community/cli@latest init</CODE> to Expo SDK packages.
-    </>
-  }
-  Icon={BookOpen02Icon}
-/>
-
-<BoxLink
-  title="Use libraries"
-  description="Learn how to install Expo SDK packages in your project."
-  href="/workflow/using-libraries"
-  Icon={CodeSquare01Icon}
-/>
-
-## Using pre-release versions
-
-New Expo SDK versions are released three times each year. Between these releases, we publish pre-release versions of the `expo` package and all of the Expo SDK packages. Pre-releases are not considered stable and should only be used if you are comfortable with the risk of encountering bugs or other issues.
-
-### Canary releases
-
-Canary releases represent a snapshot of the state of the `main` branch at the time they are published. Canary package versions include `-canary` in the name, along with the date and commit hash, such as `57.0.0-canary-20260526-13e89ca`. To install the latest canary release:
-
-<Terminal
-  cmd={[
-    '# Install the alpha version of expo and its related packages',
-    '$ npm install expo@canary && npx expo install --fix',
-  ]}
-  cmdCopy="npm install expo@canary && npx expo install --fix"
-/>
-
-You can often use pre-release versions of individual packages with stable releases of the Expo SDK. There may occasionally be incompatibilities or other issues that arise in canary-quality releases. You may want to [silence dependency validation warnings](/more/expo-cli/#configuring-dependency-validation) if you opt in to the canary package and once you have verified that it works well for your use cases.
-
-### Beta releases
-
-Before each Expo SDK release, we publish beta versions of the `expo` package and all of the Expo SDK packages. Beta releases are considered much more stable than canary releases, and we encourage developers to try them out on their apps and share their feedback. Beta releases use the `beta` tag on npm and follow the instructions in the related [changelog](https://expo.dev/changelog) post.
-
-## Each Expo SDK version depends on a React Native version
-
-<ReactNativeCompatibilityTable />
-
-### Additional information
-
-<Collapsible summary="Expo SDK policy for tracking React Native releases">
-
-- Each Expo SDK release targets a single React Native version. This is typically the latest stable version at the time of the release.
-- React Native currently has six releases per year and aims for every release to include no breaking changes.
-- Expo SDK releases aim to follow this cadence.
-- Pre-release versions of the upcoming Expo SDK will include support for the latest version of React Native quickly, usually the same day it is released. A member of the Expo SDK team works on the React Native releases team for each release, and is responsible for continuously updating the React Native version in the Expo repository, verifying compatibility, and reporting regressions back to the React Native team.
-
-</Collapsible>
-
-<Collapsible summary="What if I need a change from the latest React Native version and it's not yet in an Expo SDK release?"
->
-Expo engineers on the React Native releases team ensure that any urgent fixes are included in the React Native version used by the latest Expo SDK. If your specific fix won't be cherrypicked into an existing release, perhaps because it is not considered critical or because it involves a breaking change, then you have two options:
-
-1. Use [`patch-package`](https://github.com/ds300/patch-package) to pull in the fix.
-2. Use a [pre-release version of the Expo SDK](#using-pre-release-versions).
-
-</Collapsible>
-
-<Collapsible summary="Can I use an older version of React Native with the latest Expo SDK?">
-
-Packages in the Expo SDK are intended to support the target React Native version for that SDK. Typically, they will not support older versions of React Native, but they may. When a new version of React Native is released, the latest versions of the Expo SDK packages are typically updated to support it. However, this may take weeks or more, depending on the extent of the changes in the release.
-
-</Collapsible>
-
-## Support for Android and iOS versions
-
-Each version of Expo SDK supports a minimum OS version of Android and iOS. For Android, the `compileSdkVersion` is defined which tells the [Gradle](https://developer.android.com/studio/build) which Android SDK version to use to compile the app. This also means that you can use the Android API features included in that SDK version and from the previous versions. For iOS, the [Xcode](https://developer.apple.com/news/upcoming-requirements/) tells the minimum Xcode SDK version to use to compile the app.
-
-<AndroidIOSCompatibilityTable />
-
-When deciding whether to upgrade your Expo SDK version, consider both Expo's SDK version and app store submission requirements, as described in the above table. Google Play Store and Apple App Store periodically increase their minimum required OS versions and API levels, which are required for new app submissions. Expo has no control over the app store requirements, and you should check [Google](https://developer.android.com/studio/build) and [Apple](https://developer.apple.com/news/upcoming-requirements/) for the current store submission requirements.
+const styles = StyleSheet.create({
+  fondo: { flex: 1, backgroundColor: '#f4f7f2' },
+  contenido: { padding: 22, paddingTop: 32 },
+  logo: { fontSize: 46, textAlign: 'center' },
+  titulo: {
+    fontSize: 27, fontWeight: 'bold',
+    textAlign: 'center', color: '#174c32',
+  },
+  subtitulo: {
+    textAlign: 'center', color: '#647067',
+    marginTop: 7, marginBottom: 26,
+  },
+  etiqueta: {
+    fontWeight: '600', color: '#25372b',
+    marginBottom: 8, marginTop: 15,
+  },
+  servicios: {
+    flexDirection: 'row', flexWrap: 'wrap', gap: 8,
+  },
+  opcion: {
+    backgroundColor: '#fff', padding: 12,
+    borderRadius: 10, borderWidth: 1, borderColor: '#d8e1d8',
+  },
+  seleccionado: { backgroundColor: '#247747', borderColor: '#247747' },
+  texto: { color: '#25372b' },
+  blanco: { color: '#fff', fontWeight: 'bold' },
+  campo: {
+    backgroundColor: '#fff', borderWidth: 1,
+    borderColor: '#d8e1d8', borderRadius: 5,
+    padding: 14, fontSize: 16,
+  },
+  precio: {
+    marginTop: 22, padding: 18, borderRadius: 14,
+    backgroundColor: '#e2efdf',
+  },
+  precioTexto: { color: '#31513b' },
+  cantidad: {
+    fontSize: 29, fontWeight: 'bold',
+    color: '#174c32', marginTop: 5,
+  },
+  nota: { color: '#526455', marginTop: 6 },
+  boton: {
+    backgroundColor: '#247747', padding: 16,
+    borderRadius: 12, alignItems: 'center', marginTop: 20,
+  },
+  botonTexto: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
+  pie: { textAlign: 'center', color: '#68756a', marginTop: 22 },
+});
